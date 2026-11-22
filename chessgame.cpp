@@ -96,6 +96,11 @@ void ChessGame::initializeBoard()
     }
 
     moveHistory.clear();
+    redoHistory.clear();
+    castlingRights = 15;
+    enPassantSquare = -1;
+    halfmoves = 0;
+    positions.assign(1, positionKey());
 }
 
 

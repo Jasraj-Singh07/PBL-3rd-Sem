@@ -149,7 +149,7 @@ bool ChessGame::isSquareAttacked(
                      rowDifference == colDifference);
             }
 
-            if (!validDirection)
+            if ((fromRow == row && fromCol == col) || !validDirection)
             {
                 continue;
             }
@@ -268,17 +268,9 @@ bool ChessGame::wouldMoveLeaveKingInCheck(
     }
 
 
-    // Make a temporary copy of the entire game.
-
-    ChessGame testGame = *this;
-
-
-    testGame.board[toRow][toCol] =
-        testGame.board[fromRow][fromCol];
-
-    testGame.board[fromRow][fromCol] =
-        Piece();
-
+    ChessGame testGame(PositionOnly{}, *this);
+    testGame.applyBoardMove(Move(fromRow, fromCol, toRow, toCol,
+                                 movingPiece, board[toRow][toCol]));
 
     return testGame.isKingInCheck(
         movingPiece.color);
@@ -356,6 +348,8 @@ bool ChessGame::isValidMove(
 bool ChessGame::hasAnyLegalMove(
     PieceColor color) const
 {
+    ChessGame testGame(PositionOnly{}, *this);
+    testGame.currentTurn = color;
     for (int fromRow = 0;
          fromRow < 8;
          fromRow++)
@@ -386,16 +380,6 @@ bool ChessGame::hasAnyLegalMove(
                      toCol < 8;
                      toCol++)
                 {
-                    // We cannot directly use isValidMove()
-                    // because that checks currentTurn.
-                    //
-                    // Temporarily make a copy with this color
-                    // as the current player.
-
-                    ChessGame testGame = *this;
-
-                    testGame.currentTurn = color;
-
                     if (testGame.isValidMove(
                             fromRow,
                             fromCol,
@@ -467,7 +451,7 @@ bool ChessGame::isGameOver() const
 {
     return
         isCheckmate(currentTurn) ||
-        isStalemate(currentTurn);
+        isStalemate(currentTurn) || !drawReason().isEmpty();
 }
 
 

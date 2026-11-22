@@ -6,6 +6,7 @@
 #include "movehistory.h"
 
 #include <QString>
+#include <string>
 
 class ChessGame
 {
@@ -13,8 +14,19 @@ private:
     Piece board[8][8];
 
     MoveHistory moveHistory;
+    MoveHistory redoHistory;
 
     PieceColor currentTurn;
+    int castlingRights = 15;
+    int enPassantSquare = -1;
+    int halfmoves = 0;
+    std::vector<std::string> positions;
+
+    struct PositionOnly {};
+    ChessGame(PositionOnly, const ChessGame &other);
+    void applyBoardMove(const Move &move);
+    void applyTurn(const Move &move);
+    std::string positionKey() const;
 
 public:
     ChessGame();
@@ -49,9 +61,12 @@ public:
         int fromRow,
         int fromCol,
         int toRow,
-        int toCol);
+        int toCol,
+        PieceType promotion = PieceType::Queen);
 
+    QString drawReason() const;
     bool undoMove();
+    bool redoMove();
 
     int getMoveCount() const;
 
@@ -74,6 +89,7 @@ public:
         PieceColor color) const;
 
     bool isGameOver() const;
+    bool attacked(int r,int c,PieceColor by) const { return isSquareAttacked(r,c,by); }
 
 private:
     bool isPawnMoveValid(

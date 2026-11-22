@@ -107,8 +107,9 @@ bool ChessGame::isPawnMoveValid(
 
     if (std::abs(toCol - fromCol) == 1 &&
         toRow == fromRow + direction &&
-        !board[toRow][toCol].isEmpty() &&
-        board[toRow][toCol].color != pawn.color)
+        ((!board[toRow][toCol].isEmpty() &&
+          board[toRow][toCol].color != pawn.color) ||
+         (pawn.color == currentTurn && toRow * 8 + toCol == enPassantSquare)))
     {
         return true;
     }
@@ -235,6 +236,22 @@ bool ChessGame::isKingMoveValid(
 
     int colDifference =
         std::abs(toCol - fromCol);
+
+    if (rowDifference == 0 && colDifference == 2)
+    {
+        const auto color = board[fromRow][fromCol].color;
+        if (fromCol != 4 || fromRow != (color == PieceColor::White ? 7 : 0))
+            return false;
+        const bool kingside = toCol == 6;
+        const int rookCol = kingside ? 7 : 0;
+        const int right = 1 << ((color == PieceColor::White ? 0 : 2) + !kingside);
+        const Piece rook = board[fromRow][rookCol];
+        if (!(castlingRights & right) || rook.type != PieceType::Rook ||
+            rook.color != color || !isPathClear(fromRow, fromCol, fromRow, rookCol))
+            return false;
+        return !isKingInCheck(color) &&
+               !wouldMoveLeaveKingInCheck(fromRow, fromCol, toRow, kingside ? 5 : 3);
+    }
 
     return rowDifference <= 1 &&
            colDifference <= 1;

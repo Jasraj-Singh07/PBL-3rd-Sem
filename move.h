@@ -13,6 +13,10 @@ struct Move
 
     Piece movedPiece;
     Piece capturedPiece;
+    PieceType promotion = PieceType::Queen;
+    int previousRights = 0;
+    int previousEnPassant = -1;
+    int previousHalfmoves = 0;
 
     Move()
     {
